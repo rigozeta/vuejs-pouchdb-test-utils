@@ -42,23 +42,4 @@ describe('HelloWorld.vue', () => {
 		});
 	})
 
-	// it('adds values in db', async ()=>{
-	// 	await flushPromises().then(()=>{
-	// 		expect(wrapper.vm.addFn('values','test')).toBe(true)
-	// 	},()=>{
-	// 		return false
-	// 	})
-	//
-	//
-	// })
-
-	// it('renders props.msg when passed', () => {
-	// 	const msg = 'new message'
-	// 	const wrapper = shallowMount(HelloWorld, {
-	// 		propsData: {
-	// 			msg
-	// 		}
-	// 	})
-	// 	expect(wrapper.text()).toMatch(msg)
-	// })
 })
