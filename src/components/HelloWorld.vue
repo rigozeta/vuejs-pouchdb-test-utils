@@ -45,7 +45,9 @@
 				principles: [],
 
 				newValues: "",
-				newPrinciples: ""
+				newPrinciples: "",
+
+				dataInitialized: false,
 			}
 		},
 		created: function() {
@@ -56,7 +58,6 @@
 			db.allDocs({
 				include_docs: true
 			}).then(function(response){
-				console.log("res",response)
 				if(response.rows.length > 0){
 					for(let d = 0; d < response.rows.length; d++){
 						if(response.rows[d].doc.type == "values"){
@@ -72,7 +73,7 @@
 
 
 			}).catch(function(err){
-				console.error(err);
+				console.log(err);
 			});
 			// db.post({
 			// 	title: 'Ziggy Stardust'
@@ -91,7 +92,7 @@
 			initializeData: function(){
 				let self = this;
 				if(self.values.length + self.principles.length < 1){
-					db.bulkDocs([
+					return db.bulkDocs([
 						{title:"Individuals and Interactions Over Processes and Tools", type:"values"},
 						{title:"Working Software Over Comprehensive Documentation", type:"values"},
 						{title:"Customer Collaboration Over Contract Negotiation", type:"values"},
@@ -108,17 +109,20 @@
 						{title:"Simplicity", type:"principles"},
 						{title:"Self-Organizing Teams", type:"principles"},
 						{title:"Regular Reflection and Adjustment", type:"principles"}
-					]).then(function(r){
-						console.log("DB Populated successfully", r);
+					]).then(function(){
+						self.dataInitialized = true;
+						self.getAll();
 					},function(err){
-						console.error("Could not populate db", err);
+						console.log("Could not populate db", err);
+
+
 					});
 
-					self.getAll();
 
-					return true;
+
+
 				}else{
-					console.error("DB is not empty");
+					console.log("DB is not empty");
 					return false;
 				}
 
@@ -130,10 +134,9 @@
 				self.values = [];
 				self.principles = [];
 
-				db.allDocs({
+				return db.allDocs({
 					include_docs: true
 				}).then(function(response){
-					console.log("retrieve response",response)
 					for(let d = 0; d < response.rows.length; d++){
 						if(response.rows[d].doc.type == "values"){
 							self.values.push(response.rows[d].doc)
@@ -141,39 +144,48 @@
 							self.principles.push(response.rows[d].doc)
 						}
 					}
+
+					return self.values.length + self.principles.length;
 				}).catch(function(err){
-					console.error(err);
+					console.log(err);
+
+					return self.values.length;
 				});
 			},
 			addFn: function(type){
 				let self = this;
 
-				db.post({
+				return db.post({
 					title: (type == 'values' ? self.newValues:self.newPrinciples),
 					type: type
-				}).then(function(response) {
-					console.log("insert response", response)
+				}).then(function() {
 					self.newValues = "";
 					self.newPrinciples = "";
 					self.getAll();
+					return true;
 				}).catch(function(err) {
-					console.error(err);
+					console.log(err);
+
+					return false;
 				});
 			},
 
 			updateFn: function(doc){
 				let self = this;
 
-				db.put({
+				return db.put({
 					_id: doc._id,
 					title: doc.title,
 					_rev: doc._rev,
 					type: doc.type
-				}).then(function(response) {
-					console.log("update response", response)
+				}).then(function() {
 					self.getAll();
+
+					return true
 				}).catch(function(err) {
-					console.error(err);
+					console.log(err);
+
+					return false
 				});
 			},
 
@@ -186,16 +198,19 @@
 			clearFn: function(){
 				let self = this;
 
-				db.allDocs({
+				return db.allDocs({
 					include_docs: true
 				}).then(function(response){
 					for(let d = 0; d < response.rows.length; d++){
 						db.remove(response.rows[d].doc)
 					}
 
-					self.getAll();
+					return self.getAll();
+
 				}).catch(function(err){
-					console.error(err);
+					console.log(err);
+
+					return false
 				});
 			}
 		}
